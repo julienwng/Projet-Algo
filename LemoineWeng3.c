@@ -15,6 +15,9 @@ typedef bloc_image *image ;
 image Wht(){
     bloc_image* b = (bloc_image*) malloc(sizeof(bloc_image));
     b->blanc = true;
+    for(int i = 0; i < 4; i++){
+        b->Im[i] = NULL;
+    }
     return b;
 }
 
@@ -32,26 +35,51 @@ image Cut(image i0, image i1, image i2, image i3){
     return res;
 }
 
-void Affiche(image im){
-
-    if(im == NULL) {
-    printf("Z");
-    return;
+void Affiche_bis(image im){
+    if(im == NULL){
+        printf("Z");
     }
     else if (im->blanc == true){
-    printf("o");
-    return;
+        printf("o");
     }
     else{
         printf("*");
-        for(int i = 0;i < 4; i++) Affiche(im->Im[i]);
+        for(int i = 0;i < 4; i++){
+            Affiche_bis(im->Im[i]);
+        }
+    }
+}
+
+void Affiche(image im){
+    Affiche_bis(im);
+    printf("\n");
+}
+
+void ProfAfficheBis(image im, int cpt){
+    if(im == NULL){
+        printf("Z%d ", cpt);
+    }
+    else if (im->blanc == true){
+        printf("o%d ", cpt);
+    }
+    else{
+        printf("*%d ", cpt);
+        for(int i = 0;i < 4; i++){
+            ProfAfficheBis(im->Im[i], cpt+1);
+        }
     }
 }
 
 void ProfAffiche(image im){
-    return;
+    ProfAfficheBis(im, 0);
+    printf("\n");
 
 }
+
+image Lecture(){
+    return NULL;
+}
+
 int main(){
     bloc_image * im = (bloc_image*) malloc(sizeof(bloc_image));
     im->blanc = false;
@@ -66,6 +94,9 @@ int main(){
         }
         p--;
     }
+    printf("-----Affichage normal------\n");
     Affiche(im);
+    printf("-----Affichage Profondeur------\n");
+    ProfAffiche(im);
     return 0;
 }
