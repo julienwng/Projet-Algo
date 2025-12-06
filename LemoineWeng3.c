@@ -15,6 +15,9 @@ typedef bloc_image *image ;
 image Wht(){
     bloc_image* b = (bloc_image*) malloc(sizeof(bloc_image));
     b->blanc = true;
+    for(int i = 0; i < 4; i++){
+        b->Im[i] = NULL;
+    }
     return b;
 }
 
@@ -24,7 +27,7 @@ image Blk(){
 
 image Cut(image i0, image i1, image i2, image i3){
     bloc_image *res = (bloc_image*) malloc(sizeof(bloc_image));
-    res = false;
+    res->blanc = false;
     res ->Im[0] = i0;
     res ->Im[1] = i1;
     res ->Im[2] = i2;
@@ -32,26 +35,71 @@ image Cut(image i0, image i1, image i2, image i3){
     return res;
 }
 
-void Affiche(image im){
-
-    if(im == NULL) {
-    printf("Z");
-    return;
+void Affiche_bis(image im){
+    if(im == NULL){
+        printf("Z");
     }
     else if (im->blanc == true){
-    printf("o");
-    return;
+        printf("o");
     }
     else{
         printf("*");
-        for(int i = 0;i < 4; i++) Affiche(im->Im[i]);
+        for(int i = 0;i < 4; i++){
+            Affiche_bis(im->Im[i]);
+        }
+    }
+}
+
+void Affiche(image im){
+    Affiche_bis(im);
+    printf("\n");
+}
+
+void ProfAfficheBis(image im, int cpt){
+    if(im == NULL){
+        printf("Z%d ", cpt);
+    }
+    else if (im->blanc == true){
+        printf("o%d ", cpt);
+    }
+    else{
+        printf("*%d ", cpt);
+        for(int i = 0;i < 4; i++){
+            ProfAfficheBis(im->Im[i], cpt+1);
+        }
     }
 }
 
 void ProfAffiche(image im){
-    return;
+    ProfAfficheBis(im, 0);
+    printf("\n");
 
 }
+image LectureBis(){
+    char c;
+    do{
+        c = getchar();
+    } while(c != 'o' && c != 'Z' && c != '*');
+    if(c == 'o'){
+        return Wht();
+    }
+    else if(c == 'Z'){
+        return Blk();
+    }
+    else{
+        image hg = LectureBis();
+        image hd = LectureBis();
+        image bg = LectureBis();
+        image bd = LectureBis();
+        return Cut(hg, hd, bg, bd);
+    }
+}
+
+image Lecture(){
+    printf("Entrez votre image: ");
+    return LectureBis();
+}
+
 int main(){
     bloc_image * im = (bloc_image*) malloc(sizeof(bloc_image));
     im->blanc = false;
@@ -66,6 +114,12 @@ int main(){
         }
         p--;
     }
+    image im2 = Lecture();
+    printf("-----Affichage normal------\n");
     Affiche(im);
+    Affiche(im2);
+    printf("-----Affichage Profondeur------\n");
+    ProfAffiche(im);
+    ProfAffiche(im2);
     return 0;
 }
