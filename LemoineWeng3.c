@@ -98,6 +98,9 @@ image LectureBis(){
 image Lecture(){
     printf("Entrez votre image: ");
     return LectureBis();
+
+image Lecture(){
+    return NULL;
 }
 
 int main(){
@@ -121,5 +124,9 @@ int main(){
     printf("-----Affichage Profondeur------\n");
     ProfAffiche(im);
     ProfAffiche(im2);
+    printf("-----Affichage normal------\n");
+    Affiche(im);
+    printf("-----Affichage Profondeur------\n");
+    ProfAffiche(im);
     return 0;
 }
