@@ -27,7 +27,7 @@ image Blk(){
 
 image Cut(image i0, image i1, image i2, image i3){
     bloc_image *res = (bloc_image*) malloc(sizeof(bloc_image));
-    res = false;
+    res->blanc = false;
     res ->Im[0] = i0;
     res ->Im[1] = i1;
     res ->Im[2] = i2;
@@ -75,6 +75,29 @@ void ProfAffiche(image im){
     printf("\n");
 
 }
+image LectureBis(){
+    char c;
+    do{
+        c = getchar();
+    } while(c != 'o' && c != 'Z' && c != '*');
+    if(c == 'o'){
+        return Wht();
+    }
+    else if(c == 'Z'){
+        return Blk();
+    }
+    else{
+        image hg = LectureBis();
+        image hd = LectureBis();
+        image bg = LectureBis();
+        image bd = LectureBis();
+        return Cut(hg, hd, bg, bd);
+    }
+}
+
+image Lecture(){
+    printf("Entrez votre image: ");
+    return LectureBis();
 
 image Lecture(){
     return NULL;
@@ -94,6 +117,13 @@ int main(){
         }
         p--;
     }
+    image im2 = Lecture();
+    printf("-----Affichage normal------\n");
+    Affiche(im);
+    Affiche(im2);
+    printf("-----Affichage Profondeur------\n");
+    ProfAffiche(im);
+    ProfAffiche(im2);
     printf("-----Affichage normal------\n");
     Affiche(im);
     printf("-----Affichage Profondeur------\n");
