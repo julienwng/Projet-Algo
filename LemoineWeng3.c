@@ -100,6 +100,43 @@ image Lecture(){
     return LectureBis();
 }
 
+bool DessinNoir(image im){
+    if(im == NULL){
+        return true;
+    }
+    else if(im->blanc == true){
+        return false;
+    }
+    else{
+        return DessinNoir(im->Im[0]) && DessinNoir(im->Im[1]) && DessinNoir(im->Im[2]) && DessinNoir(im->Im[3]);
+    }
+}
+
+bool DessinBlanc(image im){
+    if(im == NULL){
+        return false;
+    }
+    else if(im->blanc == true){
+        return true;
+    }
+    else{
+        return DessinBlanc(im->Im[0]) && DessinBlanc(im->Im[1]) && DessinBlanc(im->Im[2]) && DessinBlanc(im->Im[3]);
+    }
+}
+
+float Quota(image im){
+    if(im == NULL){
+        return 1.0f;
+    }
+    else if(im->blanc == true){
+        return 0.0f;
+    }
+    else{
+        return (Quota(im->Im[0])+Quota(im->Im[1])
+                +Quota(im->Im[2])+Quota(im->Im[3])) / 4.0f;
+    }
+}
+
 image Copie(image im){
     if(im == NULL) return NULL;
 
@@ -129,7 +166,7 @@ image SimplifieProfP(image im, int p){
     for(int i = 0; i<4; i++){
         im->Im[i] = SimplifieProfP(im->Im[i], p-1);
     }
-    if(p <= 0 && im->Im[0] == NULL && im->Im[1] == NULL && im->Im[2] == NULL && im->Im[3] == NULL){
+    if(p <= 0 && DessinNoir(im)){
         free(im);
         return NULL;
     }
@@ -137,28 +174,24 @@ image SimplifieProfP(image im, int p){
 
 }
 
-/*
-* Renvoie true si une image est totalement noire
-*/
-bool EstNoir(image im){
-    if(im == NULL) return true;
-    if(im ->blanc == true) return false;
-    return (EstNoir(im->Im[0]) && EstNoir(im->Im[1]) && EstNoir(im->Im[2]) && EstNoir(im->Im[3]));
-}
-
 bool Incluse(image im1, image im2){
     //Cas où im1 est noire, il faut que im2 soit totalement noire aussi
     if(im1 == NULL){
-    return (EstNoir(im2));
+        return (DessinNoir(im2));
     }
 
     //Cas où im1 est blanc ou im2 est noire, toujours vrai pour n'importe quel im2 ou im1
-    if (im1->blanc == true || im2 == NULL) return true;
+    if (im1->blanc == true || im2 == NULL){
+        return true;
+    }
 
     //Cas où im2 est blanc et im1 n'est pas blanc, toujours faux
-    if(im2->blanc == true) return false;
+    if(im2->blanc == true){
+        return false;
+    }
 
-    return Incluse(im1->Im[0], im2->Im[0]) && Incluse(im1->Im[1], im2->Im[1]) && Incluse(im1->Im[2], im2->Im[2]) && Incluse(im1->Im[3], im2->Im[3]);
+    return Incluse(im1->Im[0], im2->Im[0]) && Incluse(im1->Im[1], im2->Im[1]) &&
+           Incluse(im1->Im[2], im2->Im[2]) && Incluse(im1->Im[3], im2->Im[3]);
     
 }
 
@@ -183,21 +216,30 @@ int main(){
     printf("-----Affichage Profondeur------\n");
     ProfAffiche(im);
     ProfAffiche(im2);
-    printf("-----Affichage normal------\n");
-    Affiche(im);
-    printf("-----Affichage Profondeur------\n");
-    ProfAffiche(im);
-    ProfAffiche(im2);
 
-    image im3 = Copie(im);
+    printf("------Test Image Noire--------\n");
+    bool resNoir = DessinNoir(im2);
+    printf(resNoir ? "TRUE\n" : "FALSE\n");
+    
+    printf("------Test Image Blanche--------\n");
+    bool resBlanc = DessinBlanc(im2);
+    printf(resBlanc ? "TRUE\n" : "FALSE\n");
+    
+    printf("-----------Test Quota------------\n");
+    printf("Entrez *Z*oZooZ*ZZZo, quota attendu 0.75\n");
+    image im3 = Lecture();
+    ProfAffiche(im3);
+    printf("Quota = %f\n", Quota(im3));
+    
+    image im4 = Copie(im);
     printf("----Affichage de la copie de im----\n");
-    Affiche(im3);
+    Affiche(im4);
     printf("------Affiche une image diagonale de profondeur p----\n entrez la valeur de l'entier p :\n");
     int profondeur;
     scanf("%d",&profondeur);
     image imdiag = Diagonale(profondeur);
     Affiche(imdiag);
-
+    
     printf("----Test SimplifieProfP----\n");
     int SPP;
     printf("Entrez l'entier pour SimplifieProfP : \n");
