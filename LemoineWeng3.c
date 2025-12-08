@@ -166,9 +166,21 @@ image SimplifieProfP(image im, int p){
     for(int i = 0; i<4; i++){
         im->Im[i] = SimplifieProfP(im->Im[i], p-1);
     }
-    if(p <= 0 && DessinNoir(im)){
-        free(im);
-        return NULL;
+    if(p <= 0){
+        if(DessinNoir(im)){
+            free(im);
+            return NULL;
+        }
+        if(DessinBlanc(im)){
+            for(int i = 0; i < 4; i++){
+                if(im->Im[i] != NULL){
+                    free(im->Im[i]);
+                }
+                im->Im[i] = NULL;
+            }
+            im->blanc = true;
+            return im;
+        }
     }
     return im;
 
@@ -195,6 +207,31 @@ bool Incluse(image im1, image im2){
     
 }
 
+void CompteQuotaGris(image im, int *cpt, float *quota){
+    if(im == NULL){
+        *quota = 1.0f;
+    }
+    else if(im->blanc == true){
+        *quota = 0.0f;
+    }
+    else{
+        float q0, q1, q2, q3;
+        CompteQuotaGris(im->Im[0], cpt, &q0);
+        CompteQuotaGris(im->Im[1], cpt, &q1);
+        CompteQuotaGris(im->Im[2], cpt, &q2);
+        CompteQuotaGris(im->Im[3], cpt, &q3);
+        *quota = (q0 + q1 + q2 + q3)/4.0f;
+    if(*quota >= 1.0f/3.0f && *quota <= 2.0f/3.0f) (*cpt)++;
+    }
+}
+
+int CompteSousImagesGris(image im){
+    int cpt = 0;
+    float quota;
+    CompteQuotaGris(im, &cpt, &quota);
+    return cpt;
+}
+
 int main(){
     bloc_image * im = (bloc_image*) malloc(sizeof(bloc_image));
     im->blanc = false;
@@ -219,30 +256,34 @@ int main(){
 
     printf("------Test Image Noire--------\n");
     bool resNoir = DessinNoir(im2);
-    printf(resNoir ? "TRUE\n" : "FALSE\n");
+    printf(resNoir ? "true\n" : "false\n");
     
     printf("------Test Image Blanche--------\n");
     bool resBlanc = DessinBlanc(im2);
-    printf(resBlanc ? "TRUE\n" : "FALSE\n");
+    printf(resBlanc ? "true\n" : "false\n");
     
     printf("-----------Test Quota------------\n");
-    printf("Entrez *Z*oZooZ*ZZZo, quota attendu 0.75\n");
+    printf("Exemple : *Z*oZooZ*ZZZo, quota attendu 0.75\n");
     image im3 = Lecture();
     ProfAffiche(im3);
-    printf("Quota = %f\n", Quota(im3));
+    printf("Quota = %.2f\n", Quota(im3));
     
     image im4 = Copie(im);
     printf("----Affichage de la copie de im----\n");
     Affiche(im4);
-    printf("------Affiche une image diagonale de profondeur p----\n entrez la valeur de l'entier p :\n");
+    printf("------Affiche une image diagonale de profondeur p----\n");
+    printf("entrez la valeur de l'entier p: ");
     int profondeur;
     scanf("%d",&profondeur);
     image imdiag = Diagonale(profondeur);
     Affiche(imdiag);
     
     printf("----Test SimplifieProfP----\n");
+    printf("Exemple pour p = 2 et\n * (*ZZZZ) (*Zo(*Z(*Z(*ZZZZ)(*ZZZZ)");
+    printf("(*ZZZZ))ZZ)o)(*ZoZ(*ZoZ(*oooo))) (*oo(*oooo)o) deviens :\n");
+    printf("*(*ZZZZ)(*ZoZo)(*ZoZ(*ZoZ(*oooo)))(*oooo)\n");
     int SPP;
-    printf("Entrez l'entier pour SimplifieProfP : \n");
+    printf("Entrez l'entier pour SimplifieProfP: ");
     scanf("%d",&SPP); //Exemple 2
     image imProf = Lecture(); //Exemple *(*ZZZZ)(*ZoZo)(*ZoZ(*ZoZ(*oooo)))(*oooo)
     Affiche(SimplifieProfP(imProf,SPP));
@@ -251,9 +292,19 @@ int main(){
     printf("----Test Incluse----\n");
     image imgIncluse1, imgIncluse2;
     printf("Entrez les images 1 et 2\n");
+    printf("(Exemple : ***ooooZoZoZ**ooZZoo*ZooZ et **oZZZ*ooZo*ZZZZ*ZoZ*ZZZo)\n");
+    printf("(Doit renvoyer faux)\n");
+    printf("Image 1\n");
     imgIncluse1 = Lecture(); //Exemple : ***ooooZoZoZ**ooZZoo*ZooZ
+    printf("Image 2\n");
     imgIncluse2 = Lecture(); //Exemple : **oZZZ*ooZo*ZZZZ*ZoZ*ZZZo renvoit faux
-    printf("%d\n", Incluse(imgIncluse1,imgIncluse2));
+    printf(Incluse(imgIncluse1,imgIncluse2) ? "true\n" : "false\n");
+
+    printf("----Test CompteSousImagesGris-----\n");
+    printf("Exemple : *oZ*Z*oZooo*Zooo *Z*oZooo*ZZoo renvoie 4\n");
+    image testgris = Lecture();
+    ProfAffiche(testgris);
+    printf("Nb de sous images grises : %d\n", CompteSousImagesGris(testgris));
 
     return 0;
 }
