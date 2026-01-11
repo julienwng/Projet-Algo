@@ -183,7 +183,9 @@ image SimplifieProfP(image im, int p){
         }
         if(DessinBlanc(im)){
             for(int i = 0; i < 4; i++){
-                freeTout(im);
+                if(im->Im[i] != NULL){
+                    freeTout(im->Im[i]);
+                }
                 im->Im[i] = NULL;
             }
             im->blanc = true;
@@ -352,10 +354,14 @@ int main(){
     }
     image im2 = Lecture();
     printf("-----Affichage normal------\n");
+    printf("Affichage de l'exemple donné dans l'énonce :\n");
     Affiche(im);
+    printf("Affichage de l'image entrée :\n");
     Affiche(im2);
     printf("-----Affichage Profondeur------\n");
+    printf("Affichage de l'exemple donné dans l'énonce :\n");
     ProfAffiche(im);
+    printf("Affichage de l'image entrée :\n");
     ProfAffiche(im2);
 
     printf("------Test Image Noire--------\n");
@@ -421,6 +427,18 @@ int main(){
     image laby2 = Lecture();
     ProfAffiche(laby2);
     printf("Le labyrinthe possède une solution : %s", Labyrinthe(laby2) ? "vrai\n" : "faux\n");
+
+    freeTout(im);
+    freeTout(im2);
+    freeTout(im3);
+    freeTout(im4);
+    freeTout(imdiag);
+    freeTout(imProf);
+    freeTout(imgIncluse1);
+    freeTout(imgIncluse2);
+    freeTout(testgris);
+    freeTout(laby1);
+    freeTout(laby2);
     
     return 0;
 }
