@@ -75,6 +75,7 @@ void ProfAffiche(image im){
     printf("\n");
 
 }
+
 image LectureBis(){
     char c;
     do{
@@ -124,7 +125,7 @@ bool DessinBlanc(image im){
     }
 }
 
-float Quota(image im){
+float QuotaNoir(image im){
     if(im == NULL){
         return 1.0f;
     }
@@ -132,10 +133,11 @@ float Quota(image im){
         return 0.0f;
     }
     else{
-        return (Quota(im->Im[0])+Quota(im->Im[1])
-                +Quota(im->Im[2])+Quota(im->Im[3])) / 4.0f;
+        return (QuotaNoir(im->Im[0])+QuotaNoir(im->Im[1])
+                +QuotaNoir(im->Im[2])+QuotaNoir(im->Im[3])) / 4.0f;
     }
 }
+
 image Copie(image im){
     if(im == NULL) return Blk();
     
@@ -237,6 +239,103 @@ int CompteSousImagesGris(image im){
     return cpt;
 }
 
+//Calcul de la profondeur max de l'image
+int Profondeur(image im){
+    if(im == NULL || im->blanc == true){
+        return 0;
+    }
+    int maxP = 0;
+    for(int i = 0; i < 4; i++){
+        int p = Profondeur(im->Im[i]);
+        if(p > maxP){
+            maxP = p;
+        }
+    }
+    return maxP + 1;
+}
+
+//Remplit la grille correspondant à l'image
+void ToGrille(image im, int **grille, int x, int y, int taille){
+    if(im == NULL){ 
+        for(int i = 0; i < taille; i++){
+            for(int j = 0; j < taille; j++){
+                grille[x+i][y+j] = 0; //mur (noir)
+            }
+        }
+    }
+    else if(im -> blanc == true){
+        for(int i = 0; i < taille; i++){
+            for(int j = 0; j < taille; j++){
+                grille[x+i][y+j] = 1; //chemin (blanc)
+            }
+        }
+    }
+    else{ //On divise en 4 sous grilles et on appelle récursivement
+        int n_taille = taille/2;
+        ToGrille(im->Im[0], grille, x, y, n_taille);
+        ToGrille(im->Im[1], grille, x, y + n_taille, n_taille);
+        ToGrille(im->Im[2], grille, x + n_taille, y, n_taille);
+        ToGrille(im->Im[3], grille, x + n_taille, y + n_taille, n_taille);
+    }
+}
+
+//On parcours en profondeur la grille pour chercher un chemin
+bool DFS(int **grille, int **visite, int x, int y, int N){
+    if(x < 0 || y < 0 || x >= N || y >= N){ //On est hors de la grille
+        return false;
+    }
+    if(grille[x][y] == 0 || visite[x][y] == 1){ //mur ou case déjà visitée
+        return false;
+    }
+    if(x == N-1 && y == N-1){ //On a atteint la sortie
+        return true;
+    }
+
+    visite[x][y] = 1; //case visitée
+
+    //On explore les 4 directions en priorisant droite et bas
+    if(DFS(grille, visite, x+1, y, N)) return true;
+    if(DFS(grille, visite, x, y+1, N)) return true;
+    if(DFS(grille, visite, x-1, y, N)) return true;
+    if(DFS(grille, visite, x, y-1, N)) return true;
+
+    return false; //Aucun chemin trouvé à partir de cette case
+}
+
+bool Labyrinthe(image im){
+    if(im == NULL){
+        return false;
+    }
+    if(im->blanc == true){
+        return true;
+    }
+
+    int p = Profondeur(im);
+    int N = 1 << p; //Décalage de p bits à gauche pour trouver 2^p
+                    //On divise p fois en 2 donc 2^p cases par coté
+
+    int **grille = (int**)malloc(N*sizeof(int*));
+    int **visite = (int**)malloc(N*sizeof(int*));
+    for(int i = 0; i < N; i++){
+        grille[i] = (int*)malloc(N*sizeof(int));
+        visite[i] = (int*)malloc(N*sizeof(int));
+    }
+
+    ToGrille(im, grille, 0, 0, N); //On remplit la grille
+
+    bool res = DFS(grille, visite, 0, 0, N); //On applique le DFS pour chercher un chemin
+
+    //On libère la mémoire allouée
+    for(int i = 0; i < N; i++){
+        free(grille[i]);
+        free(visite[i]);
+    }
+    free(grille);
+    free(visite);
+
+    return res;
+}
+
 int main(){
     bloc_image * im = (bloc_image*) malloc(sizeof(bloc_image));
     im->blanc = false;
@@ -271,7 +370,7 @@ int main(){
     printf("Exemple : *Z*oZooZ*ZZZo, quota attendu 0.75\n");
     image im3 = Lecture();
     ProfAffiche(im3);
-    printf("Quota = %.2f\n", Quota(im3));
+    printf("Quota = %.2f\n", QuotaNoir(im3));
     
     image im4 = Copie(im);
     printf("----Affichage de la copie de im----\n");
@@ -311,5 +410,17 @@ int main(){
     ProfAffiche(testgris);
     printf("Nb de sous images grises : %d\n", CompteSousImagesGris(testgris));
 
+    printf("----Test Labyrinthe-----\n");
+    printf("Exemple 1: ***ooZo**ZZoooZZ*Zoo*ZooZZ***ooZZoZZ*o*ooZoo*Zooo*oZ*oooZo*Z*oZoZoo*Z**ooZoooZZ*oooZ**oZZZZ*oooZ*oZoo");
+    printf(" Renvoie vrai\n");
+    printf("Exemple 2: ***ooZo**ZZoooZZ*Zoo*ZooZZ***ooZZoZZ*o*ooZoo*Zooo*oZ*ZooZo*Z*oZoZoo*Z**ooZoooZZ*oooZ**oZZZZ*oooZ*oZoo");
+    printf(" Renvoie faux\n");
+    image laby1 = Lecture();
+    ProfAffiche(laby1);
+    printf("Le labyrinthe possède une solution : %s", Labyrinthe(laby1) ? "vrai\n" : "faux\n");
+    image laby2 = Lecture();
+    ProfAffiche(laby2);
+    printf("Le labyrinthe possède une solution : %s", Labyrinthe(laby2) ? "vrai\n" : "faux\n");
+    
     return 0;
 }
