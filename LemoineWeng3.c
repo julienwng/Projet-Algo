@@ -136,17 +136,12 @@ float Quota(image im){
                 +Quota(im->Im[2])+Quota(im->Im[3])) / 4.0f;
     }
 }
-
 image Copie(image im){
-    if(im == NULL) return NULL;
-
-    bloc_image* new = (bloc_image*)malloc(sizeof(bloc_image));
-    new->blanc = im->blanc;
+    if(im == NULL) return Blk();
     
-    for(int i = 0; i < 4; i++){
-        new->Im[i] = Copie(im->Im[i]);
-    }
-    return new;
+    if(im->blanc) return Wht();
+    
+    return Cut(Copie(im->Im[0]), Copie(im->Im[1]), Copie(im->Im[2]), Copie(im->Im[3]));
 }
 
 image Diagonale(int p){
@@ -160,6 +155,19 @@ image Diagonale(int p){
     return res;
 }
 
+/*
+* Permet de free (surtout le cas où im->blanc est false)
+*/
+void freeTout(image im){
+    if(im == NULL) return;
+    if(!im->blanc){
+        for(int i = 0; i < 4; i++){
+            freeTout(im->Im[i]);
+        }
+    }
+    free(im);
+}
+
 image SimplifieProfP(image im, int p){
     if(im == NULL) return NULL;
     if(im->blanc == true) return im;
@@ -168,14 +176,12 @@ image SimplifieProfP(image im, int p){
     }
     if(p <= 0){
         if(DessinNoir(im)){
-            free(im);
+            freeTout(im);
             return NULL;
         }
         if(DessinBlanc(im)){
             for(int i = 0; i < 4; i++){
-                if(im->Im[i] != NULL){
-                    free(im->Im[i]);
-                }
+                freeTout(im);
                 im->Im[i] = NULL;
             }
             im->blanc = true;
@@ -183,7 +189,6 @@ image SimplifieProfP(image im, int p){
         }
     }
     return im;
-
 }
 
 bool Incluse(image im1, image im2){
@@ -197,9 +202,9 @@ bool Incluse(image im1, image im2){
         return true;
     }
 
-    //Cas où im2 est blanc et im1 n'est pas blanc, toujours faux
+    //Cas où im2 est blanc et im1 n'est pas blanc, si im1 est totalement blanc alors vrai, sinon faux
     if(im2->blanc == true){
-        return false;
+        return DessinBlanc(im1);
     }
 
     return Incluse(im1->Im[0], im2->Im[0]) && Incluse(im1->Im[1], im2->Im[1]) &&
